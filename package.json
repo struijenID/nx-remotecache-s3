@@ -1,7 +1,7 @@
 {
     "name": "nx-remotecache-s3",
-    "version": "1.1.1",
-    "description": "Remote caching for @nrwl/nx using Google Cloud Storage",
+    "version": "1.1.2",
+    "description": "Remote caching for @nrwl/nx using Amazon S3",
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
@@ -26,6 +26,7 @@
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1.0",
+        "@aws-sdk/credential-provider-ini": "^3.1.0",
         "@types/mkdirp": "^1.0.1",
         "get-stream": "^6.0.0",
         "mkdirp": "^1.0.4"

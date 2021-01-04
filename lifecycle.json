@@ -1,14 +1,16 @@
 {
-    "lifecycle": {
-        "rule": [
-            {
-                "action": {
-                    "type": "Delete"
-                },
-                "condition": {
-                    "age": 30
-                }
+    "Rules": [
+        {
+            "Expiration": {
+                "Days": 30
+            },
+            "ID": "id-1",
+            "Filter": {},
+            "Status": "Enabled",
+            "Transitions": [],
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1
             }
-        ]
-    }
+        }
+    ]
 }

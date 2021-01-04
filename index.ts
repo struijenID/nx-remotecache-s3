@@ -1,13 +1,14 @@
 import defaultTaskRunner from '@nrwl/workspace/tasks-runners/default';
 import { S3 } from '@aws-sdk/client-s3';
+import { fromIni } from '@aws-sdk/credential-provider-ini';
 import { join, dirname, relative } from 'path';
-import { promises, readFileSync, writeFileSync } from 'fs';
+import { promises, readFileSync } from 'fs';
 import mkdirp from 'mkdirp';
 import { default as getStream } from 'get-stream'
 
 export default function runner(
     tasks: Parameters<typeof defaultTaskRunner>[0],
-    options: Parameters<typeof defaultTaskRunner>[1] & { bucket?: string, key: string, secret: string},
+    options: Parameters<typeof defaultTaskRunner>[1] & { bucket?: string, profile?: string, region?: string},
     context: Parameters<typeof defaultTaskRunner>[2],
 ) {
     if (!options.bucket) {
@@ -15,11 +16,10 @@ export default function runner(
     }
 
     const s3 = new S3({
-        region: 'us-east-1',
-        credentials: {
-            accessKeyId: options.key,
-            secretAccessKey: options.secret
-        }
+        region: options.region ?? 'us-east-1',
+        credentials: fromIni({
+            profile: options.profile
+        })
     });
 
     return defaultTaskRunner(tasks, { ...options, remoteCache: { retrieve, store } }, context);
@@ -49,8 +49,10 @@ export default function runner(
 
             await Promise.all(files.map(f => {
                 if (f) {
-                    download(f);
+                    return download(f);
                 }
+
+                return null;
             }));
             await download(commitFile); // commit file after we're sure all content is downloaded
             console.log(`retrieved ${files.length + 1} files from cache s3://${options.bucket}/${hash}`);
@@ -74,7 +76,7 @@ export default function runner(
             let contentBuffer: Buffer | null = await getStream.buffer(fileStream as any);
             
             if (fileOutput.Body) {
-                writeFileSync(destination, contentBuffer);
+                return promises.writeFile(destination, contentBuffer);
             }
         }
     }

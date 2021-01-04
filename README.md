@@ -1,26 +1,26 @@
-# nx-remotecache-gcs
+# nx-remotecache-s3
 
-A task runner for [@nrwl/nx](https://nx.dev/react) that uses a Google Cloud Storage bucket as a remote cache, so all team members and CI servers can share a single cache. The concept and benefits of [computation caching](https://nx.dev/angular/guides/computation-caching) are explained in the NX documentation.
+A task runner for [@nrwl/nx](https://nx.dev/react) that uses an Amazon S3 bucket as a remote cache, so all team members and CI servers can share a single cache. The concept and benefits of [computation caching](https://nx.dev/angular/guides/computation-caching) are explained in the NX documentation. This is a fork of [nx-remotecache-gcs](https://github.com/wvanderdeijl/nx-remotecache-gcs).
 
-## setup
-
-```
-npm install --save-dev nx-remotecache-gcs
-```
-
-create a Google Cloud Storage bucket. Since this is only a cache, there is no need for a dual- or multi-region bucket, so choose a  single [location](https://cloud.google.com/storage/docs/locations) near you.
+## Setup
 
 ```
-gsutil mb -p [PROJECT_ID] -l [BUCKET_LOCATION] -b on gs://[BUCKET_NAME]/
+npm install --save-dev nx-remotecache-s3
 ```
 
-setup a [lifecycle rule](https://cloud.google.com/storage/docs/managing-lifecycles) for your storage bucket to automatically delete old files. If you want to use our suggested auto-delete-after-30-days rule, you can simply use the json that is included:
+Create a S3 bucket. Since this is only a cache, there is no need for a dual- or multi-region bucket, so choose a  single location near you.
 
 ```
-gsutil lifecycle set node_modules/nx-remotecache-gcs/lifecycle.json gs://[BUCKET_NAME]
+aws s3 mb s3://[BUCKET_NAME] --region [BUCKET_LOCATION]
 ```
 
-by default all viewers, editors and owners of your Google Cloud project can read and/or write to the bucket. You could also [restrict who can read and write](https://cloud.google.com/storage/docs/access-control/using-iam-permissions) the bucket to only allow certain users or (build server) service accounts.
+setup a [lifecycle rule](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) for your storage bucket to automatically delete old files. If you want to use our suggested auto-delete-after-30-days rule, you can simply use the json that is included:
+
+```
+aws s3api put-bucket-lifecycle-configuration --bucket [BUCKET_NAME] --lifecycle-configuration file://node_modules/nx-remotecache-gcs/lifecycle.json
+```
+
+You can also [restrict who can read and write](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/set-permissions.html) to the bucket to only allow certain users or (build server) service accounts.
 
 finally, add `tasksRunnerOptions` in your `nx.json` file
 
@@ -31,9 +31,11 @@ finally, add `tasksRunnerOptions` in your `nx.json` file
     },
     "tasksRunnerOptions": {
         "default": {
-            "runner": "nx-remotecache-gcs",
+            "runner": "nx-remotecache-s3",
             "options": {
-                "bucket": "gs://NAME-OF-YOUR-STORAGE-BUCKET",
+                "bucket": "NAME-OF-YOUR-STORAGE-BUCKET",
+                "region": "BUCKET-REGION",
+                "profile": "AWS-CLI-PROFILE-NAME",
                 "cacheableOperations": [
                     "build",
                     "test",
