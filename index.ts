@@ -1,6 +1,7 @@
 import defaultTaskRunner from '@nrwl/workspace/tasks-runners/default';
 import { S3 } from '@aws-sdk/client-s3';
 import { fromIni } from '@aws-sdk/credential-provider-ini';
+import { fromEnv } from '@aws-sdk/credential-provider-env';
 import { join, dirname, relative } from 'path';
 import { promises, readFileSync } from 'fs';
 import mkdirp from 'mkdirp';
@@ -8,7 +9,7 @@ import { default as getStream } from 'get-stream'
 
 export default function runner(
     tasks: Parameters<typeof defaultTaskRunner>[0],
-    options: Parameters<typeof defaultTaskRunner>[1] & { bucket?: string, profile?: string, region?: string},
+    options: Parameters<typeof defaultTaskRunner>[1] & { bucket?: string, profile?: string, region?: string, fromEnv: boolean},
     context: Parameters<typeof defaultTaskRunner>[2],
 ) {
     if (!options.bucket) {
@@ -17,7 +18,8 @@ export default function runner(
 
     const s3 = new S3({
         region: options.region ?? 'us-east-1',
-        credentials: fromIni({
+        credentials: options.fromEnv ? fromEnv(): 
+            fromIni({
             profile: options.profile
         })
     });
