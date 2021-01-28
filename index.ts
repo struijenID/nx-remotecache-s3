@@ -1,7 +1,7 @@
 import defaultTaskRunner from '@nrwl/workspace/tasks-runners/default';
 import { S3 } from '@aws-sdk/client-s3';
 import { fromIni } from '@aws-sdk/credential-provider-ini';
-import { fromEnv } from '@aws-sdk/credential-provider-env';
+import { fromEnv, ENV_KEY, ENV_SECRET } from '@aws-sdk/credential-provider-env';
 import { join, dirname, relative } from 'path';
 import { promises, readFileSync } from 'fs';
 import mkdirp from 'mkdirp';
@@ -16,17 +16,14 @@ export default function runner(
         throw new Error('missing bucket property in runner options. Please update nx.json');
     }
 
-    let credentials = fromEnv();
-    console.log('>>>>', credentials);
-    if (credentials) {
-        credentials = fromIni({
-            profile: options.profile
-        })
-    }
+    const areCredentialsInEnv = process.env[ENV_KEY] && process.env[ENV_SECRET];
+    console.log('>>>>areCredentialsInEnv', areCredentialsInEnv);
 
     const s3 = new S3({
         region: options.region ?? 'us-east-1',
-        credentials: credentials
+        credentials: areCredentialsInEnv ? fromEnv() : fromIni({
+            profile: options.profile,
+        })
     });
 
     return defaultTaskRunner(tasks, { ...options, remoteCache: { retrieve, store } }, context);
