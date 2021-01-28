@@ -16,12 +16,17 @@ export default function runner(
         throw new Error('missing bucket property in runner options. Please update nx.json');
     }
 
-    const s3 = new S3({
-        region: options.region ?? 'us-east-1',
-        credentials: options.fromEnv ? fromEnv(): 
-            fromIni({
+    let credentials = fromEnv();
+    console.log('>>>>', credentials);
+    if (credentials) {
+        credentials = fromIni({
             profile: options.profile
         })
+    }
+
+    const s3 = new S3({
+        region: options.region ?? 'us-east-1',
+        credentials: credentials
     });
 
     return defaultTaskRunner(tasks, { ...options, remoteCache: { retrieve, store } }, context);
