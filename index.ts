@@ -6,6 +6,7 @@ import { join, dirname, relative } from 'path';
 import { promises, readFileSync } from 'fs';
 import mkdirp from 'mkdirp';
 import { default as getStream } from 'get-stream'
+import { ProviderError } from "@aws-sdk/property-provider";
 
 export default function runner(
     tasks: Parameters<typeof defaultTaskRunner>[0],
@@ -26,6 +27,9 @@ export default function runner(
         })
     });
 
+    process.on('unhandledRejection', () => {});
+    process.on('rejectionHandled', () => {});
+
     return defaultTaskRunner(tasks, { ...options, remoteCache: { retrieve, store } }, context);
 
     async function retrieve(hash: string, cacheDirectory: string): Promise<boolean> {
@@ -38,6 +42,8 @@ export default function runner(
                 });
             } catch (e) {
                 if (e.name === 'NotFound') {
+                    return false;
+                } else if (e instanceof ProviderError) {
                     return false;
                 } else {
                     throw e;
