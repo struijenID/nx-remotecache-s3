@@ -1,6 +1,6 @@
 {
     "name": "nx-remotecache-s3",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "description": "Remote caching for @nrwl/nx using Amazon S3",
     "main": "index.js",
     "scripts": {
