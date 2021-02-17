@@ -16,8 +16,8 @@ export default function runner(
         throw new Error('missing bucket property in runner options. Please update nx.json');
     }
 
-    const areCredentialsInEnv = process.env[ENV_KEY] && process.env[ENV_SECRET];
-    console.log('>>>>areCredentialsInEnv', areCredentialsInEnv);
+    const areCredentialsInEnv = Boolean(process.env[ENV_KEY] && process.env[ENV_SECRET]);
+    console.log('>>>> Credentials from env?', areCredentialsInEnv);
 
     const s3 = new S3({
         region: options.region ?? 'us-east-1',
