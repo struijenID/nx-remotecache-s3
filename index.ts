@@ -41,6 +41,8 @@ export default function runner(
                     Key: `${hash}.commit`,
                 });
             } catch (e) {
+                console.log(`caught error while retrieving from cache`);
+                console.log(e);
                 if (e.name === 'NotFound') {
                     return false;
                 } else if (e instanceof ProviderError) {
