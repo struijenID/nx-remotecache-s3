@@ -1,5 +1,5 @@
 import defaultTaskRunner from '@nrwl/workspace/tasks-runners/default';
-import { S3 } from '@aws-sdk/client-s3';
+import { ListObjectsCommandInput, S3 } from '@aws-sdk/client-s3';
 import { fromIni } from '@aws-sdk/credential-provider-ini';
 import { fromEnv, ENV_KEY, ENV_SECRET } from '@aws-sdk/credential-provider-env';
 import { join, dirname, relative } from 'path';
@@ -50,18 +50,31 @@ export default function runner(
                 }
             }
 
-            const filesOutput = await s3.listObjects({
-                Bucket: options.bucket,
-                Prefix: `${hash}/`
-            });
-
-            const files = filesOutput.Contents?.map(f => f.Key) || [];
-
+            let moreFilesAreAvailable = true;
+            let lastEvaluatedKey = undefined;
+            let files: string[] = [];
+            while (moreFilesAreAvailable) {
+                const listObjectRequest: ListObjectsCommandInput = {
+                    Bucket: options.bucket,
+                    Prefix: `${hash}/`,
+                    Marker: lastEvaluatedKey
+                };
+                const listObjectsOutput = await s3.listObjects(listObjectRequest);
+                moreFilesAreAvailable = listObjectsOutput.IsTruncated ?? false;
+                if (moreFilesAreAvailable) {
+                    lastEvaluatedKey = listObjectsOutput.Contents!.splice(-1)[0].Key;
+                }
+                listObjectsOutput.Contents?.forEach(f => { 
+                    if (f.Key) {
+                        files.push(f.Key);
+                    }
+                });
+            }
+            
             await Promise.all(files.map(f => {
                 if (f) {
                     return download(f);
                 }
-
                 return null;
             }));
             await download(commitFile); // commit file after we're sure all content is downloaded
