@@ -41,13 +41,13 @@ export default function runner(
                     Key: `${hash}.commit`,
                 });
             } catch (e) {
-                console.log(`caught error while retrieving from cache`);
-                console.log(e);
-                if (e.name === 'NotFound') {
+                if ((e as any).name === 'NotFound') {
                     return false;
                 } else if (e instanceof ProviderError) {
                     return false;
                 } else {
+                    console.log(`caught error while retrieving from cache`);
+                    console.log(e);
                     throw e;
                 }
             }
@@ -84,7 +84,7 @@ export default function runner(
             return true;
         } catch (e) {
             console.log(e);
-            console.log(`WARNING: failed to download cache from ${options.bucket}: ${e.message}`);
+            console.log(`WARNING: failed to download cache from ${options.bucket}: ${(e as any).message}`);
             return false;
         }
 
@@ -121,7 +121,7 @@ export default function runner(
             console.log(`stored ${tasks.length + 1} files in cache s3://${options.bucket}/${hash}`);
             return true;
         } catch (e) {
-            console.log(`WARNING: failed to upload cache to ${options.bucket}: ${e.message}`);
+            console.log(`WARNING: failed to upload cache to ${options.bucket}: ${(e as any).message}`);
             return false;
         }
 
